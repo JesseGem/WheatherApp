@@ -1,3 +1,5 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -34,13 +36,36 @@ public class weatherApiData {
                 //Send And Consume
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+                try {
+                    String responseBody = response.body();
+
+                    // Initialize the Jackson Mapper
+                    ObjectMapper mapper = new ObjectMapper();
+
+                    // Perform the Deserialization
+                    WeatherData data = mapper.readValue(responseBody, WeatherData.class);
+
+                    // Now you can access your data via the getters you wrote!
+                    System.out.println("--- Weather Report ---");
+                    System.out.println("City: " + data.getCityName());
+                    System.out.println("Current Temp: " + data.getMain().getTemp() + "°");
+                    System.out.println("Humidity: " + data.getMain().getHumidity() + "%");
+
+                } catch (Exception e) {
+                    System.out.println("Error parsing JSON: " + e.getMessage());
+                    e.printStackTrace();
+                }
+
                 System.out.println("Status code: " + response.statusCode());
 
                 if (response.statusCode() == 200) {
                     System.out.println("Weather Data for " + cityName + ":");
                     System.out.println(response.body());
                 }else{
-                        System.out.println("Error: " + response.body());
+                    ObjectMapper mapper = new ObjectMapper();
+                    WeatherData weather = mapper.readValue(response.body(), WeatherData.class);
+
+                    System.out.println("The weather in " + weather.getCityName() + " is " + weather.getMain().getTemp() + " degrees.");
                 }
             } while (true);
         } catch (Exception e) {
