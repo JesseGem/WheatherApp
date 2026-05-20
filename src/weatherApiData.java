@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.Scanner;
 
 public class weatherApiData {
@@ -22,10 +23,17 @@ public class weatherApiData {
                 System.out.print("City name(Say No to quit): ");
                 String cityName = input.nextLine();
 
+                if (cityName.equalsIgnoreCase("No")) {
+                    System.out.println("Thank You!");
+                    input.close();
+                    return;
+                }
+
                 //Dynamic URL Construction
                 //We encode the string to handle special characters and spaces safely
                 String encodedCityName = URLEncoder.encode(cityName, StandardCharsets.UTF_8);
                 String urlString = String.format("https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric", encodedCityName, apiKey);
+
 
                 //Dynamic Request
                 HttpRequest request = HttpRequest.newBuilder()
@@ -51,6 +59,10 @@ public class weatherApiData {
                     System.out.println("Current Temp: " + data.getMain().getTemp() + "°");
                     System.out.println("Humidity: " + data.getMain().getHumidity() + "%");
 
+                    if (data.getWeather().length > 0){
+                        System.out.println("Description: " + data.getWeather()[0].getDescription());
+                    }
+
                 } catch (Exception e) {
                     System.out.println("Error parsing JSON: " + e.getMessage());
                     e.printStackTrace();
@@ -66,6 +78,10 @@ public class weatherApiData {
                     WeatherData weather = mapper.readValue(response.body(), WeatherData.class);
 
                     System.out.println("The weather in " + weather.getCityName() + " is " + weather.getMain().getTemp() + " degrees.");
+                }
+
+                if (response.statusCode() == 404) {
+                    System.out.println("Weather Data Not Found. Enter a valid city name.");
                 }
             } while (true);
         } catch (Exception e) {
